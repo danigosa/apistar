@@ -1,11 +1,14 @@
 import asyncio
 import inspect
+import logging
 
 from apistar.exceptions import ConfigurationError
 from apistar.server.components import ReturnValue
 
+log = logging.getLogger(__name__)
 
-class BaseInjector():
+
+class BaseInjector:
     def run(self, func, state):
         raise NotImplementedError()
 
@@ -16,12 +19,17 @@ class Injector(BaseInjector):
     def __init__(self, components, initial):
         self.components = components
         self.initial = dict(initial)
-        self.reverse_initial = {
-            val: key for key, val in initial.items()
-        }
+        self.reverse_initial = {val: key for key, val in initial.items()}
         self.resolver_cache = {}
 
-    def resolve_function(self, func, output_name=None, seen_state=None, parent_parameter=None, set_return=False):
+    def resolve_function(
+        self,
+        func,
+        output_name=None,
+        seen_state=None,
+        parent_parameter=None,
+        set_return=False,
+    ):
         if seen_state is None:
             seen_state = set(self.initial)
 
@@ -35,11 +43,11 @@ class Injector(BaseInjector):
             if signature.return_annotation in self.reverse_initial:
                 output_name = self.reverse_initial[signature.return_annotation]
             else:
-                output_name = 'return_value'
+                output_name = "return_value"
 
         for parameter in signature.parameters.values():
             if parameter.annotation is ReturnValue:
-                kwargs[parameter.name] = 'return_value'
+                kwargs[parameter.name] = "return_value"
                 continue
 
             # Check if the parameter class exists in 'initial'.
@@ -66,7 +74,7 @@ class Injector(BaseInjector):
                             func=component.resolve,
                             output_name=identity,
                             seen_state=seen_state,
-                            parent_parameter=parameter
+                            parent_parameter=parameter,
                         )
                     break
             else:
@@ -76,7 +84,7 @@ class Injector(BaseInjector):
         is_async = asyncio.iscoroutinefunction(func)
         if is_async and not self.allow_async:
             msg = 'Function "%s" may not be async.'
-            raise ConfigurationError(msg % (func.__name__, ))
+            raise ConfigurationError(msg % (func.__name__,))
 
         step = (func, is_async, kwargs, consts, output_name, set_return)
         steps.append(step)
@@ -86,7 +94,9 @@ class Injector(BaseInjector):
         steps = []
         seen_state = set(self.initial)
         for func in funcs:
-            func_steps = self.resolve_function(func, seen_state=seen_state, set_return=True)
+            func_steps = self.resolve_function(
+                func, seen_state=seen_state, set_return=True
+            )
             steps.extend(func_steps)
         return steps
 
@@ -95,17 +105,23 @@ class Injector(BaseInjector):
         try:
             steps = self.resolver_cache[funcs]
         except KeyError:
+            log.debug(f"Exception thrown on resolver_cache", exc_info=True)
             if not funcs:
                 return
             steps = self.resolve_functions(funcs)
             self.resolver_cache[funcs] = steps
 
+        log.debug(f"Resolved steps: {steps}")
         for func, is_async, kwargs, consts, output_name, set_return in steps:
+            log.debug(
+                f"Running step: "
+                f"{(func, is_async, kwargs, consts, output_name, set_return)}"
+            )
             func_kwargs = {key: state[val] for key, val in kwargs.items()}
             func_kwargs.update(consts)
             state[output_name] = func(**func_kwargs)
             if set_return:
-                state['return_value'] = state[output_name]
+                state["return_value"] = state[output_name]
 
         return state[output_name]
 
@@ -116,14 +132,21 @@ class ASyncInjector(Injector):
     async def run_async(self, funcs, state):
         funcs = tuple(funcs)
         try:
+            log.debug(f"Seen state: {self.resolver_cache}")
             steps = self.resolver_cache[funcs]
         except KeyError:
+            log.debug(f"Exception thrown on resolver_cache", exc_info=True)
             if not funcs:
                 return
             steps = self.resolve_functions(funcs)
             self.resolver_cache[funcs] = steps
 
+        log.debug(f"Resolved steps: {steps}")
         for func, is_async, kwargs, consts, output_name, set_return in steps:
+            log.debug(
+                f"Running step: "
+                f"{(func, is_async, kwargs, consts, output_name, set_return)}"
+            )
             func_kwargs = {key: state[val] for key, val in kwargs.items()}
             func_kwargs.update(consts)
             if is_async:
@@ -131,6 +154,6 @@ class ASyncInjector(Injector):
             else:
                 state[output_name] = func(**func_kwargs)
             if set_return:
-                state['return_value'] = state[output_name]
+                state["return_value"] = state[output_name]
 
         return state[output_name]

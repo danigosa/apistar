@@ -1,3 +1,4 @@
+import logging
 import sys
 import typing
 
@@ -25,6 +26,10 @@ from apistar.server.validation import (
 from apistar.server.wsgi import (
     RESPONSE_STATUS_TEXT, WSGI_COMPONENTS, WSGIEnviron, WSGIStartResponse
 )
+
+
+
+log = logging.getLogger(__name__)
 
 
 class App():
@@ -257,6 +262,7 @@ class App():
                 )
             return self.injector.run(funcs, state)
         except Exception as exc:
+            log.debug(f"Thrown Exception running all handlers: {exc}")
             try:
                 state['exc'] = exc
                 funcs = (
@@ -266,6 +272,7 @@ class App():
                 )
                 return self.injector.run(funcs, state)
             except Exception as inner_exc:
+                log.debug(f"Thrown Exception in exception handling phase: {inner_exc}")
                 try:
                     state['exc'] = inner_exc
                     self.injector.run(on_error, state)
@@ -355,6 +362,7 @@ class ASyncApp(App):
                     )
                 await self.injector.run_async(funcs, state)
             except Exception as exc:
+                log.debug(f"Thrown Exception running all handlers: {exc}", exc_info=True)
                 try:
                     state['exc'] = exc
                     funcs = (
@@ -364,6 +372,7 @@ class ASyncApp(App):
                     )
                     await self.injector.run_async(funcs, state)
                 except Exception as inner_exc:
+                    log.debug(f"Thrown Exception in exception handling phase: {inner_exc}", exc_info=True)
                     try:
                         state['exc'] = inner_exc
                         await self.injector.run_async(on_error, state)

@@ -103,8 +103,11 @@ class HeaderComponent(Component):
 
 class BodyComponent(Component):
     async def resolve(self,
-                      receive: ASGIReceive) -> http.Body:
+                      receive: ASGIReceive,
+                      exception: Exception) -> http.Body:
         body = b''
+        if exception:
+            return body
         while True:
             message = await receive()
             if not message['type'] == 'http.request':

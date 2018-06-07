@@ -1,11 +1,9 @@
 import asyncio
 import inspect
-import logging
 
 from apistar.exceptions import ConfigurationError
 from apistar.server.components import ReturnValue
 
-log = logging.getLogger(__name__)
 
 
 class BaseInjector:
@@ -105,18 +103,12 @@ class Injector(BaseInjector):
         try:
             steps = self.resolver_cache[funcs]
         except KeyError:
-            log.debug(f"Exception thrown on resolver_cache", exc_info=True)
             if not funcs:
                 return
             steps = self.resolve_functions(funcs)
             self.resolver_cache[funcs] = steps
 
-        log.debug(f"Resolved steps: {steps}")
         for func, is_async, kwargs, consts, output_name, set_return in steps:
-            log.debug(
-                f"Running step: "
-                f"{(func, is_async, kwargs, consts, output_name, set_return)}"
-            )
             func_kwargs = {key: state[val] for key, val in kwargs.items()}
             func_kwargs.update(consts)
             state[output_name] = func(**func_kwargs)
@@ -132,21 +124,14 @@ class ASyncInjector(Injector):
     async def run_async(self, funcs, state):
         funcs = tuple(funcs)
         try:
-            log.debug(f"Seen state: {self.resolver_cache}")
             steps = self.resolver_cache[funcs]
         except KeyError:
-            log.debug(f"Exception thrown on resolver_cache", exc_info=True)
             if not funcs:
                 return
             steps = self.resolve_functions(funcs)
             self.resolver_cache[funcs] = steps
 
-        log.debug(f"Resolved steps: {steps}")
         for func, is_async, kwargs, consts, output_name, set_return in steps:
-            log.debug(
-                f"Running step: "
-                f"{(func, is_async, kwargs, consts, output_name, set_return)}"
-            )
             func_kwargs = {key: state[val] for key, val in kwargs.items()}
             func_kwargs.update(consts)
             if is_async:

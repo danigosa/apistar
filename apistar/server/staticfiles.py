@@ -105,7 +105,7 @@ class ASGIFileSession():
                     chunk = next_chunk
             finally:
                 # Free resource
-                file.close()
+                await file.close()
 
     async def get_response(self, method, request_headers):
         if method != 'GET' and method != 'HEAD':

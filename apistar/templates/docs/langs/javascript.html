@@ -8,11 +8,15 @@
 {% endif %}
 {%- if True %}var options = {
     method: "{{ link.method }}"
-{%- if link.get_body_field() %},
+{%- if link.get_body_field() and link.encoding == 'application/json'%},
     body: JSON.stringify(data),
     headers: {
         "content-type": "application/json"
-    }{% endif %}
+    }{% else %}
+    body: data,
+    headers: {
+        "content-type": "{{ link.encoding }}"{% endif %}
+    }
 };
 {% endif %}
 {%- if link.get_query_fields() %}url.search = new URLSearchParams({
@@ -23,6 +27,6 @@ fetch(url, options).then(function(response) {
     if (!response.ok) {
         throw new Error(response.statusText);
     }
-    console.log(response.json());
+    {%if link.encoding == 'application/json'%}console.log(response.json());{% else %}console.log(String(response));{% endif %}
 })
 </code></pre>

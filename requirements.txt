@@ -8,6 +8,7 @@ werkzeug
 aiofiles
 jinja2
 whitenoise
+gfm
 
 # Testing requirements
 codecov

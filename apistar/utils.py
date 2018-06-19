@@ -33,3 +33,8 @@ def encode_json(data, indent=False):
 def encode_jsonschema(validator, to_data_structure=False):
     codec = codecs.JSONSchemaCodec()
     return codec.encode(validator, to_data_structure=to_data_structure)
+
+
+def remove_markdown_paragraph(md: str) -> str:
+    md = md.replace("<p>", "<span>").replace("</p>", "</span>")
+    return md

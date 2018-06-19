@@ -2,8 +2,11 @@ import inspect
 import re
 import typing
 
+from gfm import markdown
+
 from apistar import http, types, validators
 from apistar.document import Document, Field, Link, Response, Section
+from apistar.utils import remove_markdown_paragraph
 
 
 class Route:
@@ -33,7 +36,7 @@ class Route:
             encoding=_encoding,
             fields=fields,
             response=self.generate_response(handler, _encoding),
-            description=handler.__doc__
+            description=markdown(str(handler.__doc__))
         )
 
     def generate_fields(self, url, method, handler):
@@ -46,9 +49,15 @@ class Route:
             if name in path_names:
                 schema = {
                     param.empty: None,
-                    int: validators.Integer(),
-                    float: validators.Number(),
-                    str: validators.String()
+                    int: validators.Integer(
+                        description=remove_markdown_paragraph(markdown("`Integer`"))
+                    ),
+                    float: validators.Number(
+                        description=remove_markdown_paragraph(markdown("`Number`"))
+                    ),
+                    str: validators.String(
+                        description=remove_markdown_paragraph(markdown("`String`"))
+                    )
                 }[param.annotation]
                 field = Field(name=name, location='path', schema=schema)
                 fields.append(field)
@@ -62,16 +71,36 @@ class Route:
                     kwargs = {'default': param.default}
                 schema = {
                     param.empty: None,
-                    int: validators.Integer(**kwargs),
-                    float: validators.Number(**kwargs),
-                    bool: validators.Boolean(**kwargs),
-                    str: validators.String(**kwargs),
-                    http.QueryParam: validators.String(**kwargs),
+                    int: validators.Integer(
+                        description=remove_markdown_paragraph(markdown("`Integer`")),
+                        **kwargs
+                    ),
+                    float: validators.Number(
+                        description=remove_markdown_paragraph(markdown("`Number`")),
+                        **kwargs
+                    ),
+                    bool: validators.Boolean(
+                        description=remove_markdown_paragraph(markdown("`Boolean`")),
+                        **kwargs
+                    ),
+                    str: validators.String(
+                        description=remove_markdown_paragraph(markdown("`String`")),
+                        **kwargs
+                    ),
+                    http.QueryParam: validators.String(
+                        description=remove_markdown_paragraph(markdown("`String`")),
+                        **kwargs
+                    ),
                 }[param.annotation]
                 field = Field(name=name, location='query', schema=schema)
                 fields.append(field)
 
             elif issubclass(param.annotation, types.Type):
+                for name, validator in param.annotation.validator.properties.items():
+                    if validator.description:
+                        validator.description = remove_markdown_paragraph(
+                            markdown(validator.description)
+                        )
                 if method in ('GET', 'DELETE'):
                     for name, validator in param.annotation.validator.properties.items():
                         field = Field(name=name, location='query', schema=validator)

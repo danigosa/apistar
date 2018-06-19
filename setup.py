@@ -3,7 +3,6 @@
 
 import os
 import re
-import sys
 
 from setuptools import setup
 
@@ -70,6 +69,7 @@ setup(
     install_requires=[
         'click',
         'jinja2',
+        'gfm',
         'requests',
         'pyyaml',
         'werkzeug',

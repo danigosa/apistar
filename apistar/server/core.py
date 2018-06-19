@@ -6,29 +6,33 @@ from apistar import http, types, validators
 from apistar.document import Document, Field, Link, Response, Section
 
 
-class Route():
-    def __init__(self, url, method, handler, name=None, documented=True, standalone=False):
+class Route:
+    def __init__(
+            self, url, method, handler,
+            name=None, documented=True, standalone=False, encoding=None
+    ):
         self.url = url
         self.method = method
         self.handler = handler
         self.name = name or handler.__name__
         self.documented = documented
         self.standalone = standalone
+        self.encoding = encoding
         self.link = self.generate_link(url, method, handler, self.name)
 
     def generate_link(self, url, method, handler, name):
         fields = self.generate_fields(url, method, handler)
-        response = self.generate_response(handler)
-        encoding = None
-        if any([f.location == 'body' for f in fields]):
-            encoding = 'application/json'
+        if self.encoding is None and any([f.location == 'body' for f in fields]):
+            _encoding = 'application/json'
+        else:
+            _encoding = self.encoding
         return Link(
             url=url,
             method=method,
             name=name,
-            encoding=encoding,
+            encoding=_encoding,
             fields=fields,
-            response=response,
+            response=self.generate_response(handler, _encoding),
             description=handler.__doc__
         )
 
@@ -78,21 +82,21 @@ class Route():
 
         return fields
 
-    def generate_response(self, handler):
+    def generate_response(self, handler, encoding):
         annotation = inspect.signature(handler).return_annotation
         annotation = self.coerce_generics(annotation)
 
         if not (issubclass(annotation, types.Type) or isinstance(annotation, validators.Validator)):
             return None
 
-        return Response(encoding='application/json', status_code=200, schema=annotation)
+        return Response(encoding=encoding, status_code=200, schema=annotation)
 
     def coerce_generics(self, annotation):
         if (
-            isinstance(annotation, type) and
-            issubclass(annotation, typing.List) and
-            getattr(annotation, '__args__', None) and
-            issubclass(annotation.__args__[0], types.Type)
+                isinstance(annotation, type) and
+                issubclass(annotation, typing.List) and
+                getattr(annotation, '__args__', None) and
+                issubclass(annotation.__args__[0], types.Type)
         ):
             return validators.Array(items=annotation.__args__[0])
         return annotation

@@ -27,12 +27,10 @@ from apistar.server.wsgi import (
     RESPONSE_STATUS_TEXT, WSGI_COMPONENTS, WSGIEnviron, WSGIStartResponse
 )
 
-
-
 log = logging.getLogger(__name__)
 
 
-class App():
+class App:
     interface = 'wsgi'
 
     def __init__(self,

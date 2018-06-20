@@ -31,18 +31,15 @@ def encode_jsonschema(validator, to_data_structure=False):
 def markdown_paragraph(md: str, description=False) -> str:
     if md is None or md == "None":
         return ""
-    print(f"Markdown: ({type(md)}){md}")
     md = markdown(md)
     if description:
         html = "<div class=\"description\">" + md + "</div>"
     else:
         html = md
-    print(f"After md html: {html}")
     return html
 
 
 def strip_html_tags(html) -> str:
-    print(f"Before stripping: {html}")
-    soup = BeautifulSoup(html)
-    print(f"After stripping: {html}")
-    return soup.get_text()
+    soup = BeautifulSoup(html, 'html.parser')
+    text = soup.get_text()
+    return text

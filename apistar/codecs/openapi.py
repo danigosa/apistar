@@ -287,7 +287,6 @@ OPEN_API = validators.Object(
     }
 )
 
-
 METHODS = [
     'get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'
 ]
@@ -325,6 +324,26 @@ def _simple_slugify(text):
     return text.strip('_')
 
 
+def _strip_openapi_html_descriptions(d: dict):
+    for k, v in d.items():
+        print(f"Processing {k}:{v}")
+        if k == 'description':
+            d[k] = strip_html_tags(d[k])
+            if d[k] in ('String', 'Integer', 'Boolean', 'Timestamp', 'Date'):
+                d[k] = d[k].lower()
+            if d[k] == "Number":
+                d[k] = "float"
+        else:
+            if isinstance(v, dict):
+                d[k] = _strip_openapi_html_descriptions(v)
+            if k == 'parameters':
+                d['parameters'] = [
+                    _strip_openapi_html_descriptions(p) for p in v
+                ]
+
+    return d
+
+
 class OpenAPICodec(BaseCodec):
     media_type = 'application/vnd.oai.openapi'
     format = 'openapi'
@@ -343,7 +362,8 @@ class OpenAPICodec(BaseCodec):
         schema_definitions = self.get_schema_definitions(data)
         content = self.get_content(data, base_url, schema_definitions)
 
-        return Document(title=title, description=strip_html_tags(description), version=version, url=base_url, content=content)
+        return Document(title=title, description=strip_html_tags(description), version=version, url=base_url,
+                        content=content)
 
     def get_schema_definitions(self, data):
         definitions = {}
@@ -462,6 +482,7 @@ class OpenAPICodec(BaseCodec):
     def encode(self, document, **options):
         schema_defs = {}
         paths = self.get_paths(document, schema_defs=schema_defs)
+        paths = _strip_openapi_html_descriptions(paths)
         openapi = OPEN_API.validate({
             'openapi': '3.0.0',
             'info': {
@@ -476,7 +497,9 @@ class OpenAPICodec(BaseCodec):
         })
 
         if schema_defs:
-            openapi['components'] = {'schemas': schema_defs}
+            openapi['components'] = {
+                'schemas': _strip_openapi_html_descriptions(schema_defs)
+            }
 
         if not document.url:
             openapi.pop('servers')

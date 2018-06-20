@@ -49,7 +49,8 @@ expected_schema = """{
                         "name": "name",
                         "in": "query",
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "description": "string"
                         }
                     },
                     {
@@ -57,6 +58,7 @@ expected_schema = """{
                         "in": "query",
                         "schema": {
                             "type": "integer",
+                            "description": "integer",
                             "default": null,
                             "nullable": true
                         }
@@ -66,7 +68,7 @@ expected_schema = """{
                     "200": {
                         "description": "",
                         "content": {
-                            "application/json": {
+                            "null": {
                                 "schema": {
                                     "type": "array",
                                     "items": {
@@ -88,7 +90,8 @@ expected_schema = """{
                         "in": "query",
                         "schema": {
                             "type": "string",
-                            "maxLength": 100
+                            "maxLength": 100,
+                            "description": "string"
                         }
                     },
                     {
@@ -96,6 +99,7 @@ expected_schema = """{
                         "in": "query",
                         "schema": {
                             "type": "integer",
+                            "description": "integer",
                             "default": null,
                             "nullable": true
                         }
@@ -124,10 +128,12 @@ expected_schema = """{
                 "type": "object",
                 "properties": {
                     "name": {
+                        "description": "string",
                         "type": "string",
                         "maxLength": 100
                     },
                     "age": {
+                        "description": "integer",
                         "default": null,
                         "nullable": true,
                         "type": "integer"

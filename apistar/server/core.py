@@ -36,7 +36,7 @@ class Route:
             fields=fields,
             response=self.generate_response(handler, _encoding),
             description=markdown_paragraph(
-                str(handler.__doc__)
+                str(handler.__doc__), description=True
             )
         )
 

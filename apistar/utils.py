@@ -28,33 +28,21 @@ def encode_jsonschema(validator, to_data_structure=False):
     return codec.encode(validator, to_data_structure=to_data_structure)
 
 
-def markdown_paragraph(md: str) -> str:
-    if md is None:
+def markdown_paragraph(md: str, description=False) -> str:
+    if md is None or md == "None":
         return ""
     print(f"Markdown: ({type(md)}){md}")
-    html = markdown(md)
-    print(f"Before bs4 html: {html}")
-    soup = BeautifulSoup(html)
-    soup = soup.prettify()
-    print(f"After bs4 html: {html}")
-    return soup
-
-
-# class HTMLStripper(HTMLParser):
-#     def __init__(self):
-#         self.reset()
-#         self.strict = False
-#         self.convert_charrefs = True
-#         self.fed = []
-#
-#     def handle_data(self, d):
-#         self.fed.append(d)
-#
-#     def get_data(self):
-#         return "".join(self.fed)
-
-
-def strip_html_tags(html):
-    # s = HTMLStripper()
-    # s.feed(html)
+    md = markdown(md)
+    if description:
+        html = "<div class=\"description\">" + md + "</div>"
+    else:
+        html = md
+    print(f"After md html: {html}")
     return html
+
+
+def strip_html_tags(html) -> str:
+    print(f"Before stripping: {html}")
+    soup = BeautifulSoup(html)
+    print(f"After stripping: {html}")
+    return soup.get_text()

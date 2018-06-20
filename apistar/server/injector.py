@@ -5,7 +5,7 @@ import inspect
 from apistar.exceptions import ConfigurationError
 from apistar.http import QueryString
 from apistar.server.components import ReturnValue
-from apistar.validators import Validator, String
+from apistar.validators import String, Validator
 
 
 class BaseInjector:

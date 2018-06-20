@@ -2,11 +2,9 @@ import inspect
 import re
 import typing
 
-from gfm import markdown
-
 from apistar import http, types, validators
 from apistar.document import Document, Field, Link, Response, Section
-from apistar.utils import remove_markdown_paragraph, strip_html_tags
+from apistar.utils import markdown_paragraph
 from apistar.validators import Validator
 
 
@@ -37,8 +35,8 @@ class Route:
             encoding=_encoding,
             fields=fields,
             response=self.generate_response(handler, _encoding),
-            description=remove_markdown_paragraph(
-                markdown(str(handler.__doc__))
+            description=markdown_paragraph(
+                str(handler.__doc__), description=True
             )
         )
 
@@ -52,12 +50,12 @@ class Route:
             if name in path_names:
                 if isinstance(param.annotation, Validator):
                     if param.annotation.description:
-                        param.annotation.description = remove_markdown_paragraph(
-                            markdown(param.annotation.description)
+                        param.annotation.description = markdown_paragraph(
+                            param.annotation.description
                         )
                     else:
-                        param.annotation.description = remove_markdown_paragraph(
-                            markdown("`{}`".format(param.annotation.__class__.__name__))
+                        param.annotation.description = markdown_paragraph(
+                         "`{}`".format(param.annotation.__class__.__name__)
                         )
                     schema = param.annotation
                 else:
@@ -71,15 +69,15 @@ class Route:
                     schema = {
                         param.empty: None,
                         int: validators.Integer(
-                            description=remove_markdown_paragraph(markdown("`Integer`")),
+                            description=markdown_paragraph("`Integer`"),
                             **kwargs
                         ),
                         float: validators.Number(
-                            description=remove_markdown_paragraph(markdown("`Number`")),
+                            description=markdown_paragraph("`Number`"),
                             **kwargs
                         ),
                         str: validators.String(
-                            description=remove_markdown_paragraph(markdown("`String`")),
+                            description=markdown_paragraph("`String`"),
                             **kwargs
                         ),
                     }[param.annotation]
@@ -96,23 +94,23 @@ class Route:
                 schema = {
                     param.empty: None,
                     int: validators.Integer(
-                        description=remove_markdown_paragraph(markdown("`Integer`")),
+                        description=markdown_paragraph("`Integer`"),
                         **kwargs
                     ),
                     float: validators.Number(
-                        description=remove_markdown_paragraph(markdown("`Number`")),
+                        description=markdown_paragraph("`Number`"),
                         **kwargs
                     ),
                     bool: validators.Boolean(
-                        description=remove_markdown_paragraph(markdown("`Boolean`")),
+                        description=markdown_paragraph("`Boolean`"),
                         **kwargs
                     ),
                     str: validators.String(
-                        description=remove_markdown_paragraph(markdown("`String`")),
+                        description=markdown_paragraph("`String`"),
                         **kwargs
                     ),
                     http.QueryParam: validators.String(
-                        description=remove_markdown_paragraph(markdown("`String`")),
+                        description=markdown_paragraph("`String`"),
                         **kwargs
                     ),
                 }[param.annotation]
@@ -122,12 +120,12 @@ class Route:
                 fields.append(field)
             elif isinstance(param.annotation, Validator):
                 if param.annotation.description:
-                    param.annotation.description = remove_markdown_paragraph(
-                        markdown(param.annotation.description)
+                    param.annotation.description = markdown_paragraph(
+                        param.annotation.description
                     )
                 else:
-                    param.annotation.description = remove_markdown_paragraph(
-                        markdown("`{}`".format(param.annotation.__class__.__name__))
+                    param.annotation.description = markdown_paragraph(
+                        "`{}`".format(param.annotation.__class__.__name__)
                     )
                 field = Field(
                     name=name, location='query', schema=param.annotation,
@@ -138,24 +136,24 @@ class Route:
                 if method in ('GET', 'DELETE'):
                     for _name, validator in param.annotation.validator.properties.items():
                         if validator.description:
-                            validator.description = remove_markdown_paragraph(
-                                markdown(validator.description)
+                            validator.description = markdown_paragraph(
+                                validator.description
                             )
                         else:
-                            validator.description = remove_markdown_paragraph(
-                                markdown("`{}`".format(validator.__class__.__name__))
+                            validator.description = markdown_paragraph(
+                                "`{}`".format(validator.__class__.__name__)
                             )
                         field = Field(name=_name, location='query', schema=validator)
                         fields.append(field)
                 else:
                     for _, validator in param.annotation.validator.properties.items():
                         if validator.description:
-                            validator.description = remove_markdown_paragraph(
-                                markdown(validator.description)
+                            validator.description = markdown_paragraph(
+                                validator.description
                             )
                         else:
-                            validator.description = remove_markdown_paragraph(
-                                markdown("`{}`".format(validator.__class__.__name__))
+                            validator.description = markdown_paragraph(
+                                "`{}`".format(validator.__class__.__name__)
                             )
                     field = Field(
                         name=name, location='body',

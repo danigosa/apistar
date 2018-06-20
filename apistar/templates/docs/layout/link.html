@@ -16,7 +16,7 @@
             <code>{{ link.url }}</code>
         </div>
 
-        {% if link.description|safe %}<p class="description">{{ link.description|safe }}</p>{% endif %}
+        {% if link.description|safe %}{{ link.description|safe }}{% endif %}
 
 {% if link.get_path_fields() %}
     <h4>Path Parameters</h4>

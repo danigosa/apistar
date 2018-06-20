@@ -9,6 +9,8 @@ aiofiles
 jinja2
 whitenoise
 gfm
+BeautifulSoup4
+
 
 # Testing requirements
 codecov

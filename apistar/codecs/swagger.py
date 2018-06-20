@@ -8,7 +8,6 @@ from apistar.codecs.jsonschema import JSON_SCHEMA
 from apistar.compat import dict_type
 from apistar.document import Document, Field, Link, Section
 from apistar.parse import infer_json_or_yaml, parse_json, parse_yaml
-from apistar.utils import strip_html_tags
 
 SCHEMA_REF = validators.Object(
     properties={'$ref': validators.String(pattern='^#/components/schemas/')}
@@ -317,7 +316,7 @@ class SwaggerCodec(BaseCodec):
             data = parse_yaml(content, validator=SWAGGER)
 
         title = lookup(data, ['info', 'title'])
-        description = strip_html_tags(lookup(data, ['info', 'description']))
+        description = lookup(data, ['info', 'description'])
         version = lookup(data, ['info', 'version'])
         host = lookup(data, ['host'])
         path = lookup(data, ['basePath'], '/')
@@ -373,7 +372,7 @@ class SwaggerCodec(BaseCodec):
         """
         name = operation_info.get('operationId')
         title = operation_info.get('summary')
-        description = strip_html_tags(operation_info.get('description'))
+        description = operation_info.get('description')
 
         if name is None:
             name = _simple_slugify(title)
@@ -403,7 +402,7 @@ class SwaggerCodec(BaseCodec):
             url=urljoin(base_url, path),
             method=operation,
             title=title,
-            description=strip_html_tags(description),
+            description=description,
             fields=fields,
             encoding=encoding
         )
@@ -414,7 +413,7 @@ class SwaggerCodec(BaseCodec):
         """
         name = parameter.get('name')
         location = parameter.get('in')
-        description = strip_html_tags(parameter.get('description'))
+        description = parameter.get('description')
         required = parameter.get('required', False)
         schema = parameter.get('schema')
         example = parameter.get('example')
@@ -443,7 +442,7 @@ class SwaggerCodec(BaseCodec):
             'info': {
                 'version': document.version,
                 'title': document.title,
-                'description': strip_html_tags(document.description)
+                'description': document.description
             },
             'servers': [{
                 'url': document.url
@@ -486,7 +485,7 @@ class SwaggerCodec(BaseCodec):
         if link.title:
             operation['summary'] = link.title
         if link.description:
-            operation['description'] = strip_html_tags(link.description)
+            operation['description'] = link.description
         if tag:
             operation['tags'] = [tag]
         if link.get_path_fields() or link.get_query_fields():
@@ -537,7 +536,7 @@ class SwaggerCodec(BaseCodec):
         if field.required:
             parameter['required'] = True
         if field.description:
-            parameter['description'] = strip_html_tags(field.description)
+            parameter['description'] = field.description
         if field.schema:
             parameter['schema'] = JSONSchemaCodec().encode_to_data_structure(
                 field.schema,

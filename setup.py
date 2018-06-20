@@ -70,6 +70,7 @@ setup(
         'click',
         'jinja2',
         'gfm',
+        'BeautifulSoup4',
         'requests',
         'pyyaml',
         'werkzeug',

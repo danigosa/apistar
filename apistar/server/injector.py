@@ -81,7 +81,6 @@ class Injector(BaseInjector):
                     }
                     param_ = params.get(name_, None)
                     if param_ is not None:
-                        print(f"param_: {param_}")
                         if param_ in ("true", "false"):
                             param_ = param_.capitalize()
                         return validator.validate(ast.literal_eval(param_))

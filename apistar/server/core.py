@@ -6,7 +6,7 @@ from gfm import markdown
 
 from apistar import http, types, validators
 from apistar.document import Document, Field, Link, Response, Section
-from apistar.utils import remove_markdown_paragraph
+from apistar.utils import remove_markdown_paragraph, strip_html_tags
 from apistar.validators import Validator
 
 
@@ -163,7 +163,6 @@ class Route:
                         required=not param.annotation.validator.allow_null
                     )
                     fields.append(field)
-
         return fields
 
     def generate_response(self, handler, encoding):

@@ -1,3 +1,4 @@
+import ast
 import asyncio
 import functools
 import inspect
@@ -73,18 +74,25 @@ class Injector(BaseInjector):
                     type_name = "_empty"
                 identity = type_name + ":" + parameter.name
 
-                def _get_validated_param(name_, qs: QueryString):
+                def _get_validated_param(name_, validator, qs: QueryString):
                     params = {
                         k: v
                         for k, v in list(map(lambda x: x.split("="), qs.split("&")))
                     }
-                    return params.get(name_, None)
+                    param_ = params.get(name_, None)
+                    if param_ is not None:
+                        print(f"param_: {param_}")
+                        if param_ in ("true", "false"):
+                            param_ = param_.capitalize()
+                        return validator.validate(ast.literal_eval(param_))
 
                 if identity not in seen_state:
                     seen_state.add(identity)
                     kwargs[parameter.name] = identity
                     steps += self.resolve_function(
-                        func=functools.partial(_get_validated_param, parameter.name),
+                        func=functools.partial(
+                            _get_validated_param, parameter.name, parameter.annotation
+                        ),
                         output_name=identity,
                         seen_state=seen_state,
                         parent_parameter=parameter,

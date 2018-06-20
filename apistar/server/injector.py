@@ -1,9 +1,11 @@
 import asyncio
+import functools
 import inspect
 
 from apistar.exceptions import ConfigurationError
+from apistar.http import QueryString
 from apistar.server.components import ReturnValue
-
+from apistar.validators import Validator, String
 
 
 class BaseInjector:
@@ -59,6 +61,34 @@ class Injector(BaseInjector):
             # parameter name in order to lookup a particular value.
             if parameter.annotation is inspect.Parameter:
                 consts[parameter.name] = parent_parameter
+                continue
+
+            # The 'Parameter' annotation can be used a Validator itself.
+            # Used for example in GET parameters annotated with validators
+            # in order to lookup a particular validated value.
+            if isinstance(parameter.annotation, Validator):
+                if isinstance(parameter.annotation, String):
+                    type_name = "str"
+                else:
+                    type_name = "_empty"
+                identity = type_name + ":" + parameter.name
+
+                def _get_validated_param(name_, qs: QueryString):
+                    params = {
+                        k: v
+                        for k, v in list(map(lambda x: x.split("="), qs.split("&")))
+                    }
+                    return params.get(name_, None)
+
+                if identity not in seen_state:
+                    seen_state.add(identity)
+                    kwargs[parameter.name] = identity
+                    steps += self.resolve_function(
+                        func=functools.partial(_get_validated_param, parameter.name),
+                        output_name=identity,
+                        seen_state=seen_state,
+                        parent_parameter=parameter,
+                    )
                 continue
 
             # Otherwise, find a component to resolve the parameter.

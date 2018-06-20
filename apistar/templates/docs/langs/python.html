@@ -12,7 +12,7 @@ url = "{{ link.url }}"{% raw %}
 {% for key, schema in link.get_expanded_body().items() %}    "{{ key }}": ...{% if not loop.last %},{% endif %}
 {% endfor %}}
 {% endif %}
-response = requests.{{ link.method.lower() }}(url{% if link.get_query_fields() %}, params=params{% endif %}{% if link.get_body_field() %}, json=data{% endif %})
+response = requests.{{ link.method.lower() }}(url{% if link.get_query_fields() %}, params=params{% endif %}{% if link.get_body_field() and link.encoding == 'application/json' %}, json=data {% else %} , data=data{% endif %})
 response.raise_for_status()
-print(response.json())
+{% if link.encoding == 'application/json' %}print(response.json()){% else %}print(response.content){% endif %}
 </code></pre>

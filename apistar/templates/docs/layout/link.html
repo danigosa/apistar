@@ -16,7 +16,7 @@
             <code>{{ link.url }}</code>
         </div>
 
-        {% if link.description %}<p class="description">{{ link.description }}</p>{% endif %}
+        {% if link.description|safe %}<p class="description">{{ link.description|safe }}</p>{% endif %}
 
 {% if link.get_path_fields() %}
     <h4>Path Parameters</h4>
@@ -27,7 +27,7 @@
         </thead>
         <tbody>
             {% for field in link.get_path_fields() %}
-            <tr><td class="parameter-name"><code>{{ field.name }}</code>{% if field.required %} <span class="label label-warning">required</span>{% endif %}</td><td>{% if field.description or field.schema.description %}{{ field.description or field.schema.description }}{% endif %}</td></tr>
+            <tr><td class="parameter-name"><code>{{ field.name }}</code>{% if field.required %} <span class="label label-warning">required</span>{% endif %}</td><td>{% if field.description|safe or field.schema.description|safe %}{{ field.description|safe or field.schema.description|safe }}{% endif %}</td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -41,7 +41,7 @@
         </thead>
         <tbody>
             {% for field in link.get_query_fields() %}
-            <tr><td class="parameter-name"><code>{{ field.name }}</code>{% if field.required %} <span class="label label-warning">required</span>{% endif %}</td><td>{% if field.description or field.schema.description %}{{ field.description or field.schema.description }}{% endif %}</td></tr>
+            <tr><td class="parameter-name"><code>{{ field.name }}</code>{% if field.required or not field.schema.allow_null %} <span class="label label-warning">required</span>{% endif %}</td><td>{% if field.description|safe or field.schema.description|safe %}{{ field.description|safe or field.schema.description|safe }}{% endif %}</td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -58,10 +58,10 @@
         <tbody>
             {% if expanded %}
                 {% for key, schema in expanded.items() %}
-                    <tr><td class="parameter-name"><code>{{ key }}</code>{% if key in field.schema.required %} <span class="label label-warning">required</span>{% endif %}</td><td>{% if schema.description %}{{ schema.description }}{% endif %}</td></tr>
+                    <tr><td class="parameter-name"><code>{{ key }}</code>{% if key in field.schema.required %} <span class="label label-warning">required</span>{% endif %}</td><td>{% if schema.description|safe %}{{ schema.description|safe }}{% endif %}</td></tr>
                 {% endfor %}
             {% else %}
-            <tr><td class="parameter-name"><code>{{ field.name }}</code>{% if field.required %} <span class="label label-warning">required</span>{% endif %}</td><td>{% if field.description or field.schema.description %}{{ field.description or field.schema.description }}{% endif %}</td></tr>
+            <tr><td class="parameter-name"><code>{{ field.name }}</code>{% if field.required %} <span class="label label-warning">required</span>{% endif %}</td><td>{% if field.description|safe or field.schema.description|safe %}{{ field.description|safe or field.schema.description|safe }}{% endif %}</td></tr>
             {% endif %}
         </tbody>
     </table>

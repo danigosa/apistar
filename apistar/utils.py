@@ -36,5 +36,7 @@ def encode_jsonschema(validator, to_data_structure=False):
 
 
 def remove_markdown_paragraph(md: str) -> str:
-    md = md.replace("<p>", "<span>").replace("</p>", "</span>")
+    if md.startswith("<p>"):
+        md = md[len("<p>"):].replace("<\p>", "", 1)
+
     return md

@@ -1,11 +1,14 @@
 import asyncio
+import functools
 import inspect
 
 from apistar.exceptions import ConfigurationError
+from apistar.http import QueryString
 from apistar.server.components import ReturnValue
+from apistar.validators import Validator, String
 
 
-class BaseInjector():
+class BaseInjector:
     def run(self, func, state):
         raise NotImplementedError()
 
@@ -16,12 +19,17 @@ class Injector(BaseInjector):
     def __init__(self, components, initial):
         self.components = components
         self.initial = dict(initial)
-        self.reverse_initial = {
-            val: key for key, val in initial.items()
-        }
+        self.reverse_initial = {val: key for key, val in initial.items()}
         self.resolver_cache = {}
 
-    def resolve_function(self, func, output_name=None, seen_state=None, parent_parameter=None, set_return=False):
+    def resolve_function(
+        self,
+        func,
+        output_name=None,
+        seen_state=None,
+        parent_parameter=None,
+        set_return=False,
+    ):
         if seen_state is None:
             seen_state = set(self.initial)
 
@@ -35,11 +43,11 @@ class Injector(BaseInjector):
             if signature.return_annotation in self.reverse_initial:
                 output_name = self.reverse_initial[signature.return_annotation]
             else:
-                output_name = 'return_value'
+                output_name = "return_value"
 
         for parameter in signature.parameters.values():
             if parameter.annotation is ReturnValue:
-                kwargs[parameter.name] = 'return_value'
+                kwargs[parameter.name] = "return_value"
                 continue
 
             # Check if the parameter class exists in 'initial'.
@@ -55,6 +63,34 @@ class Injector(BaseInjector):
                 consts[parameter.name] = parent_parameter
                 continue
 
+            # The 'Parameter' annotation can be used a Validator itself.
+            # Used for example in GET parameters annotated with validators
+            # in order to lookup a particular validated value.
+            if isinstance(parameter.annotation, Validator):
+                if isinstance(parameter.annotation, String):
+                    type_name = "str"
+                else:
+                    type_name = "_empty"
+                identity = type_name + ":" + parameter.name
+
+                def _get_validated_param(name_, qs: QueryString):
+                    params = {
+                        k: v
+                        for k, v in list(map(lambda x: x.split("="), qs.split("&")))
+                    }
+                    return params.get(name_, None)
+
+                if identity not in seen_state:
+                    seen_state.add(identity)
+                    kwargs[parameter.name] = identity
+                    steps += self.resolve_function(
+                        func=functools.partial(_get_validated_param, parameter.name),
+                        output_name=identity,
+                        seen_state=seen_state,
+                        parent_parameter=parameter,
+                    )
+                continue
+
             # Otherwise, find a component to resolve the parameter.
             for component in self.components:
                 if component.can_handle_parameter(parameter):
@@ -66,7 +102,7 @@ class Injector(BaseInjector):
                             func=component.resolve,
                             output_name=identity,
                             seen_state=seen_state,
-                            parent_parameter=parameter
+                            parent_parameter=parameter,
                         )
                     break
             else:
@@ -76,7 +112,7 @@ class Injector(BaseInjector):
         is_async = asyncio.iscoroutinefunction(func)
         if is_async and not self.allow_async:
             msg = 'Function "%s" may not be async.'
-            raise ConfigurationError(msg % (func.__name__, ))
+            raise ConfigurationError(msg % (func.__name__,))
 
         step = (func, is_async, kwargs, consts, output_name, set_return)
         steps.append(step)
@@ -86,7 +122,9 @@ class Injector(BaseInjector):
         steps = []
         seen_state = set(self.initial)
         for func in funcs:
-            func_steps = self.resolve_function(func, seen_state=seen_state, set_return=True)
+            func_steps = self.resolve_function(
+                func, seen_state=seen_state, set_return=True
+            )
             steps.extend(func_steps)
         return steps
 
@@ -105,7 +143,7 @@ class Injector(BaseInjector):
             func_kwargs.update(consts)
             state[output_name] = func(**func_kwargs)
             if set_return:
-                state['return_value'] = state[output_name]
+                state["return_value"] = state[output_name]
 
         return state[output_name]
 
@@ -131,6 +169,6 @@ class ASyncInjector(Injector):
             else:
                 state[output_name] = func(**func_kwargs)
             if set_return:
-                state['return_value'] = state[output_name]
+                state["return_value"] = state[output_name]
 
         return state[output_name]

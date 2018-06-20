@@ -29,9 +29,15 @@ def encode_jsonschema(validator, to_data_structure=False):
 
 
 def markdown_paragraph(md: str) -> str:
+    if md is None:
+        return ""
+    print(f"Markdown: ({type(md)}){md}")
     html = markdown(md)
-    soup = BeautifulSoup(html, 'html5lib')
-    return soup.prettify()
+    print(f"Before bs4 html: {html}")
+    soup = BeautifulSoup(html)
+    soup = soup.prettify()
+    print(f"After bs4 html: {html}")
+    return soup
 
 
 # class HTMLStripper(HTMLParser):

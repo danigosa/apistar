@@ -26,6 +26,7 @@ from apistar.server.validation import (
 from apistar.server.wsgi import (
     RESPONSE_STATUS_TEXT, WSGI_COMPONENTS, WSGIEnviron, WSGIStartResponse
 )
+from apistar.utils import markdown_paragraph
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +44,12 @@ class App:
                  static_url='/static/',
                  components=None,
                  event_hooks=None,
-                 codecs=None):
+                 codecs=None,
+                 description=None,
+                 version=None,
+                 title=None,
+                 url=None
+        ):
 
         packages = tuple() if packages is None else tuple(packages)
 
@@ -66,7 +72,7 @@ class App:
 
         routes = routes + self.include_extra_routes(schema_url, docs_url, static_url)
         components = self.include_component_codecs(components, codecs)
-        self.init_document(routes)
+        self.init_document(routes, description, version, title, url)
         self.init_router(routes)
         self.init_templates(template_dir, packages)
         self.init_staticfiles(static_url, static_dir, packages)
@@ -108,8 +114,19 @@ class App:
         components.append(codec_component)
         return components
 
-    def init_document(self, routes):
-        self.document = generate_document(routes)
+    def init_document(
+        self,
+        routes,
+        description=None,
+        version=None,
+        title=None,
+        url=None
+    ):
+        if description is not None:
+            description = markdown_paragraph(description, description=True)
+        self.document = generate_document(
+            routes, description, version, title, url
+        )
 
     def init_router(self, routes):
         self.router = Router(routes)

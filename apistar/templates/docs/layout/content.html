@@ -1,7 +1,11 @@
 <div class="row">
     <div class="col-md-6 intro-title">
         {% if document.description %}
-            {{ document.description }}
+            {% if document.version %}
+                <h6>VERSION: {{ document.version|safe }}
+            {% endif %} <a class="float-right" href="{{ document.url }}">[2017-present] Robbie AI® Inc. All rights reserved.</a></h6>
+            <hr>
+            {{ document.description|safe }}
         {% endif %}
     </div>
     <div class="col-md-6 source-code-chooser">
@@ -45,3 +49,13 @@
 {% for link in document.get_links() %}
     {% include "apistar/docs/layout/link.html" %}
 {% endfor %}
+
+<hr>
+<div>
+    This documentation has been generated with <a href="https://docs.apistar.com/">Apistar</a> open source library, with this copyright <a href="https://github.com/encode/apistar/blob/master/LICENSE.md">LICENSE</a>.</div>
+<br>
+<div>
+    <h6>
+        <a href="http://robbie.ai">[2017-present] Robbie AI® Inc. All rights reserved.</a>
+    </h6>
+</div>

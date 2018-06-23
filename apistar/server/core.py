@@ -55,7 +55,7 @@ class Route:
                         )
                     else:
                         param.annotation.description = markdown_paragraph(
-                         "`{}`".format(param.annotation.__class__.__name__)
+                            "`{}`".format(param.annotation.__class__.__name__)
                         )
                     schema = param.annotation
                 else:
@@ -207,7 +207,13 @@ class Include:
         return content
 
 
-def generate_document(routes):
+def generate_document(
+    routes,
+    description=None,
+    version=None,
+    title=None,
+    url=None
+):
     content = []
     for item in routes:
         if isinstance(item, Route) and item.documented:
@@ -216,4 +222,10 @@ def generate_document(routes):
             content.append(item.section)
             for link in item.section.get_links():
                 link.url = item.url + link.url
-    return Document(content=content)
+    return Document(
+        content=content,
+        description=description,
+        version=version,
+        title=title,
+        url=url
+    )
